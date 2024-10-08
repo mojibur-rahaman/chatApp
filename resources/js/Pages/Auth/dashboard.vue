@@ -11,6 +11,7 @@ onMounted(() => {
         "sendMessage",
         (event) => {
             messages.value.push(event.message);
+            playSound();
             scrollToBottom();
         }
     );
@@ -96,6 +97,7 @@ watch(
 // Handle selected user from contactList component
 const handelSelectedUser = (user) => {
     selectedUser.value = user;
+    mobileScreen.value = false;
 };
 
 // Handle messageData from chatInput Component
@@ -128,12 +130,27 @@ const filteredMessages = computed(() => {
     }
     return [];
 });
+
+// Mobile Friendly ui
+const mobileScreen = ref(true);
+
+// Message Notification sound
+const notiSound = new Audio("/sounds/1.wav");
+const playSound = () => {
+    notiSound.play();
+};
 </script>
 
 <template>
-    <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4">
         <!-- Contact List -->
-        <div class="col-span-1">
+        <div
+            class="col-span-1"
+            :class="{
+                'block md:block': true,
+                'hidden md:block': selectedUser && !mobileScreen,
+            }"
+        >
             <div class="flex flex-col h-screen p-2 bg-gray-100">
                 <!-- Contacts Header -->
                 <div class="bg-green-500 text-white p-3 rounded-t-lg shadow">
@@ -141,6 +158,7 @@ const filteredMessages = computed(() => {
                 </div>
                 <!-- Contacts Body -->
                 <contactList
+                    @click="mobileScreen = false"
                     :users="users"
                     @selectedUser="handelSelectedUser"
                 />
@@ -148,13 +166,19 @@ const filteredMessages = computed(() => {
         </div>
 
         <!-- Chat Section -->
-        <div class="col-span-1 lg:col-span-2 xl:col-span-3">
-            <div
-                v-if="selectedUser"
-                class="flex flex-col h-screen py-2 pr-2 bg-gray-100"
-            >
+        <div
+            class="col-span-1 md:col-span-2 xl:col-span-3"
+            :class="{
+                'hidden md:block': mobileScreen,
+                'block md:block': !selectedUser && mobileScreen,
+            }"
+        >
+            <div v-if="selectedUser" class="flex flex-col h-screen p-2 md:pl-0">
                 <!-- Chats Header -->
-                <ChatsHeader :selectedUser="selectedUser" />
+                <ChatsHeader
+                    :selectedUser="selectedUser"
+                    @back="mobileScreen = true"
+                />
 
                 <!-- Messages List -->
                 <div ref="chatBody" class="flex-1 overflow-y-auto">
